@@ -28,6 +28,13 @@ import me.din0s.io.CsvWriter
 import java.io.File
 
 object HtmlParser : IParser {
+    private fun StringBuilder.isBefore(next: String, end: String) : Boolean {
+        return contains(next) && indexOf(next) < indexOf(end)
+    }
+
+    private fun StringBuilder.drop(str: String) : StringBuilder {
+        return delete(0, indexOf(str) + str.length)
+    }
 
     private fun StringBuilder.getRow() : String {
         when {

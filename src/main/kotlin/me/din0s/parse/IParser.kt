@@ -25,13 +25,5 @@
 package me.din0s.parse
 
 interface IParser {
-    fun StringBuilder.isBefore(next: String, end: String) : Boolean {
-        return contains(next) && indexOf(next) < indexOf(end)
-    }
-
-    fun StringBuilder.drop(str: String) : StringBuilder {
-        return delete(0, indexOf(str) + str.length)
-    }
-
     fun parse(source: String)
 }
