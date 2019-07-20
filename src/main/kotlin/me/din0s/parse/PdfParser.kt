@@ -30,47 +30,46 @@ import org.apache.pdfbox.text.PDFTextStripper
 import java.io.File
 
 object PdfParser : IParser {
-    private const val code = "(\\D+-\\d+-\\d+)"
+    /*
+     * [CODE] [COURSE] [TYPE] ([YEAR] [MONTH] )[ECTS] [UNIT] [COEFF]( [GRADE])
+     *
+     * CODE:    CCC-NN-NN or NNN
+     * COURSE:  CC..CC
+     * TYPE:    CCC
+     * YEAR:    NNNN - NNNN         {optional}
+     * MONTH:   CCCC                {optional}
+     * ECTS:    D
+     * UNIT:    D
+     * COEFF:   D
+     * GRADE:   D                   {optional}
+     *
+     * C: character
+     * N: number
+     * D: potentially decimal
+     */
+    private const val code = "(\\w+-\\d+-\\d+|\\d+)"
     private const val word = "(\\D+)"
     private const val year = "(\\d+ - \\d+)"
     private const val month = "(\\D+)"
-    private const val optDecimal = "(\\d+(?:.\\d+)?)"
-    private val rowRegex = "$code $word\\s$word $year $month $optDecimal $optDecimal $optDecimal $optDecimal".toRegex()
+    private const val number = "(\\d+(?:\\.\\d+)?)"
 
-    private fun StringBuilder.getRow() : String {
-        val end = indexOf("Εξάμηνο:")
-        val region = when {
-            end != -1 -> substring(0, end).toString()
-            else -> toString()
-        }
-
-        val match = rowRegex.find(region) ?: throw IllegalArgumentException()
-        drop(match.value)
-
-        return match.groupValues.drop(1).joinToString(", ") {
-            it.replace("-\n", "-").replace("\n", " ")
-        }.trim()
-    }
+    private val rowRegex = "$code $word\\s$word (?:$year $month )?$number $number $number(?: $number)?".toRegex()
 
     override fun parse(source: String) {
         val sb = StringBuilder()
-        val pdf = StringBuilder()
 
-        PDDocument.load(File(source)).use {
+        PDDocument.load(File(source)).use { doc ->
             val stripper = PDFTextStripper()
-            pdf.append(stripper.getText(it))
-        }
+            val pdf = stripper.getText(doc)
 
-        while (pdf.contains("Εξάμηνο:")) {
-            pdf.drop("Βαθμ")
-
-            while (pdf.isBefore("-", " - ")) {
-                if (pdf.isBefore("Βαθμ", "-")) {
-                    pdf.drop("Βαθμ")
+            rowRegex.findAll(pdf)
+                .map { row ->
+                    row.groupValues.drop(1).joinToString(", ") {
+                        it.replace("-\n", "-").replace("\n", " ")
+                    }.trim()
+                }.forEach {
+                    sb.appendln(it)
                 }
-
-                sb.appendln(pdf.getRow())
-            }
         }
 
         CsvWriter.write(sb.toString(), source)
