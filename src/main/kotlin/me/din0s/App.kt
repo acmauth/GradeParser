@@ -26,19 +26,31 @@ package me.din0s
 
 import me.din0s.parse.HtmlParser
 import me.din0s.parse.PdfParser
+import java.io.File
+import java.util.logging.Logger
 
-private fun Array<String>.parse() {
+private fun Array<String>.parse(prefix: String = "") {
     forEach {
+        if (it.endsWith("/")) {
+            val dir = File(it)
+            if (dir.isDirectory) {
+                dir.list()!!.parse(it)
+                return@forEach
+            }
+        }
+
+        val file = "$prefix$it"
         if (it.endsWith(".pdf")) {
-            PdfParser.parse(it)
+            PdfParser.parse(file)
         } else {
-            HtmlParser.parse(it)
+            HtmlParser.parse(file)
         }
     }
-    println("Job's done!")
 }
 
 fun main(args: Array<String>) {
+    Logger.getLogger("org.apache.pdfbox").level = java.util.logging.Level.SEVERE
+
     if (args.isEmpty()) {
         print("File name: ")
         val file = readLine() ?: return
@@ -46,4 +58,5 @@ fun main(args: Array<String>) {
     } else {
         args.parse()
     }
+    println("Job's done!")
 }

@@ -28,8 +28,15 @@ import java.io.File
 import kotlin.system.exitProcess
 
 object CsvWriter {
-    fun write(data: List<String>, fileName: String) {
-        val out = File("${fileName.substringBeforeLast(".")}_results.csv")
+    private val baseName = "csv" + File.separator
+    init {
+        val dir = File(baseName)
+        dir.mkdir()
+    }
+
+    fun write(data: List<String>, source: String) {
+        val fileName = source.substringAfter('/').substringBeforeLast(".")
+        val out = File("$baseName${fileName}_results.csv")
         if (!out.exists() && !out.createNewFile()) {
             System.err.println("Could not create file!")
             exitProcess(1)
