@@ -26,4 +26,22 @@ package me.din0s.parse
 
 interface IParser {
     fun parse(source: String)
+
+    fun validate(data: List<String>, passed: Int) {
+        val count = data.filter {
+            val last = it.substringAfterLast(",").trim()
+            when {
+                last.isEmpty() -> false
+                last == "ΕΠΙΤ" -> true // ΠΡΑΚΤΙΚΗ
+                else -> {
+                    val grade = last.toDouble()
+                    grade >= 5
+                }
+            }
+        }.count()
+
+        if (passed != count) {
+            System.err.println("Passed courses don't match expected count! ($passed != $count)")
+        }
+    }
 }

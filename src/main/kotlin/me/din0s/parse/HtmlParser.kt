@@ -46,7 +46,7 @@ object HtmlParser : IParser {
     }
 
     override fun parse(source: String) {
-        val sb = StringBuilder()
+        val courses = mutableListOf<String>()
 
         val lines = File(source)
             .readLines()
@@ -63,11 +63,15 @@ object HtmlParser : IParser {
                     values.add(html.getRow())
                 }
 
-                sb.append(values.joinToString(", ")).append("\n")
+                courses.add(values.joinToString(", "))
                 html.drop("</tr>")
             }
         }
 
-        CsvWriter.write(sb.toString(), source)
+        html.drop("Σύνολο περασμένων μαθημάτων: <b>")
+        val end = html.indexOf("</b>")
+        val passed = html.substring(0, end).toInt()
+        validate(courses, passed)
+        CsvWriter.write(courses, source)
     }
 }

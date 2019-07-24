@@ -56,26 +56,24 @@ object PdfParser : IParser {
     private const val grade = "((?:$numberNoGroup|ΕΠΙΤ))?"
 
     private val rowRegex = "$code\\s+$word\\s$word (?:$year $month )?$number $number $number\\s+$grade".toRegex()
+    private val passedRegex = "Σύνολο περασμένων μαθημάτων: (\\d+)".toRegex()
 
     override fun parse(source: String) {
-        val sb = StringBuilder()
-
         PDDocument.load(File(source)).use { doc ->
             val stripper = PDFTextStripper()
             val pdf = stripper.getText(doc)
-
-            rowRegex.findAll(pdf)
+            val courses = rowRegex.findAll(pdf)
                 .map { row ->
                     row.groupValues.drop(1).joinToString(", ") {
                         it.replace("\r", "")
                             .replace("-\n", "-")
                             .replace("\n", " ")
                     }.trim()
-                }.forEach {
-                    sb.append(it).append("\n")
-                }
-        }
+                }.toList()
 
-        CsvWriter.write(sb.toString(), source)
+            val passed = passedRegex.find(pdf)!!.groupValues[1].toInt()
+            validate(courses, passed)
+            CsvWriter.write(courses, source)
+        }
     }
 }
