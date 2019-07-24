@@ -41,19 +41,21 @@ object PdfParser : IParser {
      * ECTS:    D
      * UNIT:    D
      * COEFF:   D
-     * GRADE:   D                   {optional}
+     * GRADE:   D or 'ΕΠΙΤ'         {optional}
      *
      * C: character
      * N: number
      * D: potentially decimal
      */
-    private const val code = "(\\w+-\\d+-\\d+|\\d+)"
+    private const val code = "(\\w+-\\d+-(?:\\d|\\s)+|\\d+)"
     private const val word = "(\\D+)"
     private const val year = "(\\d+ - \\d+)"
     private const val month = "(\\D+)"
-    private const val number = "(\\d+(?:\\.\\d+)?)"
+    private const val numberNoGroup = "\\d+(?:\\.\\d+)?"
+    private const val number = "($numberNoGroup)"
+    private const val grade = "((?:$numberNoGroup|ΕΠΙΤ))?"
 
-    private val rowRegex = "$code $word\\s$word (?:$year $month )?$number $number $number(?: $number)?".toRegex()
+    private val rowRegex = "$code\\s+$word\\s$word (?:$year $month )?$number $number $number\\s+$grade".toRegex()
 
     override fun parse(source: String) {
         val sb = StringBuilder()
