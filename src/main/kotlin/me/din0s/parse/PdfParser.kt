@@ -65,10 +65,12 @@ object PdfParser : IParser {
             rowRegex.findAll(pdf)
                 .map { row ->
                     row.groupValues.drop(1).joinToString(", ") {
-                        it.replace("-\n", "-").replace("\n", " ")
+                        it.replace("\r", "")
+                            .replace("-\n", "-")
+                            .replace("\n", " ")
                     }.trim()
                 }.forEach {
-                    sb.appendln(it)
+                    sb.append(it).append("\n")
                 }
         }
 
