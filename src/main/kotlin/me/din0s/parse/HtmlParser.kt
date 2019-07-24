@@ -51,17 +51,20 @@ object HtmlParser : IParser {
         val lines = File(source)
             .readLines()
             .joinToString("")
-            .substringAfter("<!-- Compute average grade -->")
+            .substringAfter("<div><h3>")
+            .substringBefore("</html>")
         val html = StringBuilder(lines)
 
         while (html.contains("</h3></div>")) {
-            while (sb.isBefore("<tr", "</tbody>")) {
+            html.drop("<tbody>")
+            while (html.isBefore("<tr>", "</tbody>")) {
                 val values = mutableListOf<String>()
-                while(sb.isBefore("<td", "</tr>")) {
+                while(html.isBefore("<td", "</tr>")) {
                     values.add(html.getRow())
                 }
 
-                sb.appendln(values.joinToString(", "))
+                sb.append(values.joinToString(", ")).append("\n")
+                html.drop("</tr>")
             }
         }
 
