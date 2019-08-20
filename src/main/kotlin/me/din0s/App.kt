@@ -34,7 +34,9 @@ private fun Array<String>.parse(prefix: String = "") {
         if (it.endsWith("/")) {
             val dir = File(it)
             if (dir.isDirectory) {
-                dir.list()!!.parse(it)
+                val file_list = dir.list()!!
+                print("Submissions found:" + file_list.size)
+                file_list.parse(it)
                 return@forEach
             }
         }
