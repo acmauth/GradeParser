@@ -35,7 +35,9 @@ object CsvWriter {
     }
 
     fun write(data: List<String>, source: String) {
-        val fileName = source.substringAfter('/').substringBeforeLast(".")
+        // Fixed filename since delimiter \ doesn't apply on both windows and unix
+        // val fileName = source.substringAfter('/').substringBeforeLast(".")
+        val fileName = File(source).nameWithoutExtension
         val out = File("$baseName${fileName}_results.csv")
         if (!out.exists() && !out.createNewFile()) {
             System.err.println("Could not create file!")
