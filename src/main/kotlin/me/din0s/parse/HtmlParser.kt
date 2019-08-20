@@ -28,15 +28,15 @@ import me.din0s.io.CsvWriter
 import java.io.File
 
 object HtmlParser : IParser {
-    private fun StringBuilder.isBefore(next: String, end: String) : Boolean {
+    private fun StringBuilder.isBefore(next: String, end: String): Boolean {
         return contains(next) && indexOf(next) < indexOf(end)
     }
 
-    private fun StringBuilder.drop(str: String) : StringBuilder {
+    private fun StringBuilder.drop(str: String): StringBuilder {
         return delete(0, indexOf(str) + str.length)
     }
 
-    private fun StringBuilder.getRow() : String {
+    private fun StringBuilder.getRow(): String {
         when {
             isBefore("<td>", "<td style") -> drop("<td>")
             else -> drop("\">")
@@ -59,12 +59,31 @@ object HtmlParser : IParser {
             html.drop("<tbody>")
             while (html.isBefore("<tr>", "</tbody>")) {
                 val values = mutableListOf<String>()
-                while(html.isBefore("<td", "</tr>")) {
+                while (html.isBefore("<td", "</tr>")) {
                     values.add(html.getRow())
                 }
 
                 courses.add(values.joinToString(", "))
                 html.drop("</tr>")
+            }
+        }
+
+
+        // Support for Απαλλαγές μαθημάτων
+        if (lines.contains("Απαλλαγές μαθημάτων")) {
+            val apallages = lines
+                .substringAfter("<h3>Απαλλαγές μαθημάτων</h3>")
+                .substringBefore("</table>")
+            val htmlApal  = StringBuilder(apallages)
+            htmlApal.drop("<tbody>")
+            while (htmlApal.isBefore("<tr>", "</tbody>")) {
+                val values = mutableListOf<String>()
+                while (htmlApal.isBefore("<td", "</tr>")) {
+                    values.add(htmlApal.getRow())
+                }
+
+                courses.add(values.joinToString(", "))
+                htmlApal.drop("</tr>")
             }
         }
 
