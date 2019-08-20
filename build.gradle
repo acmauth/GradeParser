@@ -25,6 +25,7 @@ repositories {
 
 dependencies {
     implementation 'org.apache.pdfbox:pdfbox:2.0.13'
+    implementation 'org.jsoup:jsoup:1.12.1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 }
 
