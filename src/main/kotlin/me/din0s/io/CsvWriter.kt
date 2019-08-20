@@ -44,7 +44,7 @@ object CsvWriter {
             exitProcess(1)
         } else {
             out.writeText(data.joinToString("\n"))
-            println("Parsed $fileName!\n")
+            println("Parsed $fileName")
         }
     }
 }

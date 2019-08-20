@@ -35,7 +35,7 @@ private fun Array<String>.parse(prefix: String = "") {
             val dir = File(it)
             if (dir.isDirectory) {
                 val file_list = dir.list()!!
-                print("Submissions found:" + file_list.size)
+                println("Submissions found:" + file_list.size)
                 file_list.parse(it)
                 return@forEach
             }
@@ -44,8 +44,11 @@ private fun Array<String>.parse(prefix: String = "") {
         val file = "$prefix$it"
         if (it.endsWith(".pdf")) {
             PdfParser.parse(file)
-        } else {
+        } else if (it.endsWith(".html") || it.endsWith(".eml") ){
             HtmlParser.parse(file)
+        }
+        else{
+            System.err.println("The file is not in the appropriate format:$file")
         }
     }
 }
@@ -58,6 +61,8 @@ fun main(args: Array<String>) {
         val file = readLine() ?: return
         arrayOf(file).parse()
     } else {
+        println("Given paths:")
+        args.forEach { println(it) }
         args.parse()
     }
     println("Job's done!")
