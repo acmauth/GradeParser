@@ -31,24 +31,30 @@ import java.util.logging.Logger
 
 private fun Array<String>.parse(prefix: String = "") {
     forEach {
-        if (it.endsWith("/")) {
-            val dir = File(it)
-            if (dir.isDirectory) {
-                val file_list = dir.list()!!
-                println("Submissions found:" + file_list.size)
-                file_list.parse(it)
-                return@forEach
-            }
+        val file = when {
+            prefix.isNotBlank() -> "$prefix/$it"
+            it.endsWith('/') -> it.substringBeforeLast('/')
+            else -> it
         }
 
-        val file = "$prefix$it"
+        val dir = File(file)
+        if (dir.isDirectory) {
+            val fileList = dir.list()!!
+            println("""Detected directory "$file" with ${fileList.size} files:""")
+            fileList.parse(file)
+            return@forEach
+        }
+
         if (it.endsWith(".pdf")) {
             PdfParser.parse(file)
         } else if (it.endsWith(".html") || it.endsWith(".eml") ){
             HtmlParser.parse(file)
-        }
-        else{
-            System.err.println("The file is not in the appropriate format:$file")
+        } else {
+            System.err.println("""
+                Detected a file in an unsupported format:
+                $file
+                ------------------
+            """.trimIndent())
         }
     }
 }

@@ -35,8 +35,6 @@ object CsvWriter {
     }
 
     fun write(data: List<String>, source: String) {
-        // Fixed filename since delimiter \ doesn't apply on both windows and unix
-        // val fileName = source.substringAfter('/').substringBeforeLast(".")
         val fileName = File(source).nameWithoutExtension
         val out = File("$baseName${fileName}_results.csv")
         if (!out.exists() && !out.createNewFile()) {
@@ -44,7 +42,7 @@ object CsvWriter {
             exitProcess(1)
         } else {
             out.writeText(data.joinToString("\n"))
-            println("Parsed $fileName")
+            println("Parsed $source\n------------------")
         }
     }
 }

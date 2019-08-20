@@ -41,7 +41,7 @@ interface IParser {
         }.count()
 
         if (passed != count) {
-            System.err.println("Passed courses don't match expected count! ($passed != $count)")
+            System.err.println("Expected $passed passed courses but found $count!")
         }
     }
 }
