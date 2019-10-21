@@ -88,5 +88,6 @@ gradle-app.setting
 # Custom rules
 *.pdf
 *.csv
+*.json
 *.html
 *.mhtml

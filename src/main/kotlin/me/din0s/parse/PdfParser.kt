@@ -24,7 +24,7 @@
 
 package me.din0s.parse
 
-import me.din0s.io.CsvWriter
+import me.din0s.io.IWriter
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.text.PDFTextStripper
 import java.io.File
@@ -60,7 +60,7 @@ object PdfParser : IParser {
     private val rowRegex = "$code\\s+$word\\s$word (?:$year $month )?$number $number $number$grade".toRegex()
     private val passedRegex = "Σύνολο περασμένων μαθημάτων: (\\d+)".toRegex()
 
-    override fun parse(source: String) {
+    override fun parse(source: String, writer: IWriter) {
         try {
             PDDocument.load(File(source)).use { doc ->
                 val stripper = PDFTextStripper()
@@ -76,7 +76,7 @@ object PdfParser : IParser {
 
                 val passed = passedRegex.find(pdf)!!.groupValues[1].toInt()
                 validate(courses, passed)
-                CsvWriter.write(courses, source)
+                writer.write(courses, source)
             }
         } catch (e: IOException) {
             System.err.println("""

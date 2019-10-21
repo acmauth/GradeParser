@@ -25,9 +25,27 @@
 package me.din0s.io
 
 import java.io.File
+import kotlin.system.exitProcess
 
-object CsvWriter : IWriter("csv") {
-    override fun saveToFile(out: File, data: List<String>) {
-        out.writeText(data.joinToString("\n"))
+abstract class IWriter(private val extension: String) {
+    private val dirName = extension + File.separator
+
+    init {
+        val dir = File(dirName)
+        dir.mkdir()
     }
+
+    internal fun write(data: List<String>, source: String) {
+        val fileName = File(source).nameWithoutExtension
+        val out = File("$dirName${fileName}_results.$extension")
+        if (!out.exists() && !out.createNewFile()) {
+            System.err.println("Could not create file!")
+            exitProcess(1)
+        } else {
+            saveToFile(out, data)
+            println("Parsed $source\n------------------")
+        }
+    }
+
+    abstract fun saveToFile(out: File, data: List<String>)
 }
