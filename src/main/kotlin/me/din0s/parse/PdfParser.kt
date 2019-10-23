@@ -24,10 +24,11 @@
 
 package me.din0s.parse
 
-import me.din0s.io.CsvWriter
+import me.din0s.io.IWriter
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.text.PDFTextStripper
 import java.io.File
+import java.io.IOException
 
 object PdfParser : IParser {
     /*
@@ -48,32 +49,41 @@ object PdfParser : IParser {
      * D: potentially decimal
      */
     private const val code = "(\\w+-\\d+-(?:\\d|\\s)+|\\d+)"
-    private const val word = "(\\D+)"
+    private const val word = "(\\D+(?:\\d)?)"
     private const val year = "(\\d+ - \\d+)"
     private const val month = "(\\D+)"
-    private const val numberNoGroup = "\\d+(?:\\.\\d+)?"
+    private const val allowedDigits = "\\d{1,2}"
+    private const val numberNoGroup = "$allowedDigits(?:\\.$allowedDigits)?"
     private const val number = "($numberNoGroup)"
-    private const val grade = "((?:$numberNoGroup|ΕΠΙΤ))?"
+    private const val grade = "(?:\\s+((?:$numberNoGroup|ΕΠΙΤ)))?"
 
-    private val rowRegex = "$code\\s+$word\\s$word (?:$year $month )?$number $number $number\\s+$grade".toRegex()
+    private val rowRegex = "$code\\s+$word\\s$word (?:$year $month )?$number $number $number$grade".toRegex()
     private val passedRegex = "Σύνολο περασμένων μαθημάτων: (\\d+)".toRegex()
 
-    override fun parse(source: String) {
-        PDDocument.load(File(source)).use { doc ->
-            val stripper = PDFTextStripper()
-            val pdf = stripper.getText(doc)
-            val courses = rowRegex.findAll(pdf)
-                .map { row ->
-                    row.groupValues.drop(1).joinToString(", ") {
-                        it.replace("\r", "")
-                            .replace("-\n", "-")
-                            .replace("\n", " ")
-                    }.trim()
-                }.toList()
+    override fun parse(source: String, writer: IWriter) {
+        try {
+            PDDocument.load(File(source)).use { doc ->
+                val stripper = PDFTextStripper()
+                val pdf = stripper.getText(doc)
+                val courses = rowRegex.findAll(pdf)
+                    .map { row ->
+                        row.groupValues.drop(1).joinToString(", ") {
+                            it.replace("\r", "")
+                                .replace("-\n", "-")
+                                .replace("\n", " ")
+                        }.trim()
+                    }.toList()
 
-            val passed = passedRegex.find(pdf)!!.groupValues[1].toInt()
-            validate(courses, passed)
-            CsvWriter.write(courses, source)
+                val passed = passedRegex.find(pdf)!!.groupValues[1].toInt()
+                validate(courses, passed)
+                writer.write(courses, source)
+            }
+        } catch (e: IOException) {
+            System.err.println("""
+                Unexpected exception when parsing $source
+                ${e.message}
+                ------------------
+            """.trimIndent())
         }
     }
 }

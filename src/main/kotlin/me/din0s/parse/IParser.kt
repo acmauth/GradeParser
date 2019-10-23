@@ -24,8 +24,10 @@
 
 package me.din0s.parse
 
+import me.din0s.io.IWriter
+
 interface IParser {
-    fun parse(source: String)
+    fun parse(source: String, writer: IWriter)
 
     fun validate(data: List<String>, passed: Int) {
         val count = data.filter {
@@ -41,7 +43,7 @@ interface IParser {
         }.count()
 
         if (passed != count) {
-            System.err.println("Passed courses don't match expected count! ($passed != $count)")
+            System.err.println("Expected $passed passed courses but found $count!")
         }
     }
 }

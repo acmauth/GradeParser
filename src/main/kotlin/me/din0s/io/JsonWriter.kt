@@ -24,10 +24,31 @@
 
 package me.din0s.io
 
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.File
 
-object CsvWriter : IWriter("csv") {
+object JsonWriter : IWriter("json") {
+    private val splitRegex = "\\s*,\\s*".toRegex()
+
     override fun saveToFile(out: File, data: List<String>) {
-        out.writeText(data.joinToString("\n"))
+        val json = JSONObject()
+        val courses = JSONArray()
+        data.forEachIndexed { index, str ->
+            val values = str.split(splitRegex)
+            val course = JSONObject()
+            course.put("code", values[0])
+            course.put("name", values[1])
+            course.put("type", values[2])
+            course.put("year", values[3])
+            course.put("month", values[4])
+            course.put("ects", values[5])
+            course.put("unit", values[6])
+            course.put("coeff", values[7])
+            course.put("grade", values[8])
+            courses.put(index, course)
+        }
+        json.put("courses", courses)
+        out.writeText(json.toString(4))
     }
 }

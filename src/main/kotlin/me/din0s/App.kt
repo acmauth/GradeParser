@@ -24,26 +24,40 @@
 
 package me.din0s
 
+import me.din0s.io.CsvWriter
+import me.din0s.io.JsonWriter
 import me.din0s.parse.HtmlParser
 import me.din0s.parse.PdfParser
 import java.io.File
 import java.util.logging.Logger
 
-private fun Array<String>.parse(prefix: String = "") {
+private fun Array<String>.parse(json: Boolean = false, prefix: String = "") {
+    val writer = if (json) JsonWriter else CsvWriter
     forEach {
-        if (it.endsWith("/")) {
-            val dir = File(it)
-            if (dir.isDirectory) {
-                dir.list()!!.parse(it)
-                return@forEach
-            }
+        val file = when {
+            prefix.isNotBlank() -> "$prefix/$it"
+            it.endsWith('/') -> it.substringBeforeLast('/')
+            else -> it
         }
 
-        val file = "$prefix$it"
+        val dir = File(file)
+        if (dir.isDirectory) {
+            val fileList = dir.list()!!
+            println("""Detected directory "$file" with ${fileList.size} files:""")
+            fileList.parse(json, file)
+            return@forEach
+        }
+
         if (it.endsWith(".pdf")) {
-            PdfParser.parse(file)
+            PdfParser.parse(file, writer)
+        } else if (it.endsWith(".html") || it.endsWith(".eml")) {
+            HtmlParser.parse(file, writer)
         } else {
-            HtmlParser.parse(file)
+            System.err.println("""
+                Detected a file in an unsupported format:
+                $file
+                ------------------
+            """.trimIndent())
         }
     }
 }
@@ -54,9 +68,14 @@ fun main(args: Array<String>) {
     if (args.isEmpty()) {
         print("File name: ")
         val file = readLine() ?: return
-        arrayOf(file).parse()
+        print("Export as JSON:")
+        val json = readLine() ?: return
+        arrayOf(file).parse(setOf("y", "yes", "true").contains(json.toLowerCase()))
     } else {
-        args.parse()
+        val json = args[0].equals("-json", true)
+        println("Given paths:")
+        args.forEach { println(it) }
+        args.parse(json)
     }
     println("Job's done!")
 }

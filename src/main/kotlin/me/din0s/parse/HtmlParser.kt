@@ -24,54 +24,34 @@
 
 package me.din0s.parse
 
-import me.din0s.io.CsvWriter
+import me.din0s.io.IWriter
+import org.jsoup.Jsoup
 import java.io.File
 
 object HtmlParser : IParser {
-    private fun StringBuilder.isBefore(next: String, end: String) : Boolean {
-        return contains(next) && indexOf(next) < indexOf(end)
-    }
-
-    private fun StringBuilder.drop(str: String) : StringBuilder {
-        return delete(0, indexOf(str) + str.length)
-    }
-
-    private fun StringBuilder.getRow() : String {
-        when {
-            isBefore("<td>", "<td style") -> drop("<td>")
-            else -> drop("\">")
-        }
-
-        return substring(0, indexOf("</td>")).trim().replace("&amp;", "&")
-    }
-
-    override fun parse(source: String) {
+    override fun parse(source: String, writer: IWriter) {
         val courses = mutableListOf<String>()
 
         val lines = File(source)
             .readLines()
             .joinToString("")
-            .substringAfter("<div><h3>")
+            .substringAfter("<html>")
             .substringBefore("</html>")
-        val html = StringBuilder(lines)
-
-        while (html.contains("</h3></div>")) {
-            html.drop("<tbody>")
-            while (html.isBefore("<tr>", "</tbody>")) {
-                val values = mutableListOf<String>()
-                while(html.isBefore("<td", "</tr>")) {
-                    values.add(html.getRow())
-                }
-
-                courses.add(values.joinToString(", "))
-                html.drop("</tr>")
+        val html = Jsoup.parse("<html>$lines</html>").body()
+        html.getElementsByClass("mytableSIS").forEach { table ->
+            val rows = table.select("tbody").select("tr")
+            rows.forEach { row ->
+                val cols = row.select("td")
+                courses.add(cols.joinToString(", ") { it.text() })
             }
         }
 
-        html.drop("Σύνολο περασμένων μαθημάτων: <b>")
-        val end = html.indexOf("</b>")
-        val passed = html.substring(0, end).toInt()
+        val passed = lines
+            .substringAfter("Σύνολο περασμένων μαθημάτων: <b>")
+            .substringBefore("</b>")
+            .toInt()
+
         validate(courses, passed)
-        CsvWriter.write(courses, source)
+        writer.write(courses, source)
     }
 }
