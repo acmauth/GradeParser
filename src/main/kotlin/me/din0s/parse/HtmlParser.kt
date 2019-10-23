@@ -24,12 +24,12 @@
 
 package me.din0s.parse
 
-import me.din0s.io.CsvWriter
+import me.din0s.io.IWriter
 import org.jsoup.Jsoup
 import java.io.File
 
 object HtmlParser : IParser {
-    override fun parse(source: String) {
+    override fun parse(source: String, writer: IWriter) {
         val courses = mutableListOf<String>()
 
         val lines = File(source)
@@ -52,6 +52,6 @@ object HtmlParser : IParser {
             .toInt()
 
         validate(courses, passed)
-        CsvWriter.write(courses, source)
+        writer.write(courses, source)
     }
 }

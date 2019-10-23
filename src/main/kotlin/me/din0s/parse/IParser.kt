@@ -24,8 +24,10 @@
 
 package me.din0s.parse
 
+import me.din0s.io.IWriter
+
 interface IParser {
-    fun parse(source: String)
+    fun parse(source: String, writer: IWriter)
 
     fun validate(data: List<String>, passed: Int) {
         val count = data.filter {
